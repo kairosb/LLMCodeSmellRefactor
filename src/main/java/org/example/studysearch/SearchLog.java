@@ -1,61 +1,59 @@
 package org.example.studysearch;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SearchLog {
-    private List<String> searchHistory;
-    private Map<String, Integer> searchCount;
+    private final List<String> searchHistory;
+    private final Map<String, Integer> searchCount;
     private boolean isLocked;
-    private Integer numUsages;
-    private String logName;
+    private Integer searchUsageCount;
+    private final String logName;
 
     public SearchLog(String logName) {
         searchHistory = new ArrayList<>();
         searchCount = new HashMap<>();
         this.logName = logName;
-        numUsages = 0;
+        searchUsageCount = 0;
         isLocked = false;
     }
-    public void addSearchHistory(String searchHistory) {
-        this.searchHistory.add(searchHistory);
+
+    public void recordSearch(String searchTerm) {
+        if (!isLocked) {
+            searchHistory.add(searchTerm);
+            updateSearchCount(searchTerm);
+            incrementUsage();
+        }
     }
+
+    private void updateSearchCount(String searchTerm) {
+        searchCount.merge(searchTerm, 1, Integer::sum);
+    }
+
+    private void incrementUsage() {
+        searchUsageCount++;
+    }
+
     public List<String> getSearchHistory() {
-        return searchHistory;
+        return Collections.unmodifiableList(searchHistory);
     }
-    public void setSearchHistory(List<String> searchHistory) {
-        this.searchHistory = searchHistory;
+
+    public int getSearchFrequency(String term) {
+        return searchCount.getOrDefault(term, 0);
     }
-    public Map<String, Integer> getSearchCount() {
-        return searchCount;
-    }
-    public void setSearchCount(Map<String, Integer> serchCount) {
-        this.searchCount = serchCount;
+
+    public void setLockStatus(boolean locked) {
+        this.isLocked = locked;
     }
 
     public boolean isLocked() {
         return isLocked;
     }
 
-    public void setLocked(boolean locked) {
-        isLocked = locked;
+    public int getUsageCount() {
+        return searchUsageCount;
     }
 
-    public Integer getNumUsages() {
-        return numUsages;
-    }
-
-    public void setNumUsages(Integer numUsages) {
-        this.numUsages = numUsages;
-    }
-
-    public String getLogName() {
+    public String getLogIdentifier() {
         return logName;
-    }
-
-    public void setLogName(String logName) {
-        this.logName = logName;
     }
 }
