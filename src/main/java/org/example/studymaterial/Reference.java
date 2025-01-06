@@ -1,103 +1,93 @@
+
+// Reference.java
 package org.example.studymaterial;
 
 public abstract class Reference {
     private String title;
     private String description;
     private String link;
-    private String accessRights;
-    private String license;
-    private boolean isDownloadable;
-    private int rating;
     private String language;
-    private int viewCount;
-    private int downloadCount;
-    private int shareCount;
+    private final ReferenceMetrics metrics;
+    private final AccessControl accessControl;
 
-    public void setTitle(String title) {
-        this.title = title;
+    protected Reference(String title, String link, String language) {
+        setTitle(title);
+        setLink(link);
+        setLanguage(language);
+        this.metrics = new ReferenceMetrics();
+        this.accessControl = new AccessControl();
     }
 
+    protected Reference() {
+        this.metrics = new ReferenceMetrics();
+        this.accessControl = new AccessControl();
+    }
+
+    public void view() {
+        metrics.incrementViews();
+    }
+
+    public void download() {
+        if (!accessControl.isDownloadable()) {
+            throw new IllegalStateException("This reference is not downloadable");
+        }
+        metrics.incrementDownloads();
+    }
+
+    public void share() {
+        metrics.incrementShares();
+    }
+
+    public void rate(int score) {
+        metrics.setRating(score);
+    }
+
+    public boolean isPopular() {
+        return metrics.isPopular();
+    }
+
+    // Getters e setters essenciais
     public String getTitle() {
         return title;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    protected void setTitle(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Title cannot be empty");
+        }
+        this.title = title;
     }
 
-    public String getDescription() {
-        return description;
+    protected void setDescription(String description) {
+        if (description != null && !description.trim().isEmpty()) {
+            this.description = description;
+        }
     }
 
-    public void setLink(String link) {
+    protected void setLink(String link) {
+        if (link == null || link.trim().isEmpty()) {
+            throw new IllegalArgumentException("Link cannot be empty");
+        }
         this.link = link;
     }
 
-    public String getLink() {
-        return link;
-    }
-
-    public String getAccessRights() {
-        return accessRights;
-    }
-
-    public void setAccessRights(String accessRights) {
-        this.accessRights = accessRights;
-    }
-
-    public String getLicense() {
-        return license;
-    }
-
-    public void setLicense(String license) {
-        this.license = license;
-    }
-
-    public boolean getIsDownloadable() {
-        return isDownloadable;
-    }
-
-    public void setDownloadable(boolean downloadable) {
-        isDownloadable = downloadable;
-    }
-
-    public int getRating() {
-        return rating;
-    }
-
-    public void setRating(int rating) {
-        this.rating = rating;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public void setLanguage(String language) {
+    protected void setLanguage(String language) {
+        if (language == null || language.trim().isEmpty()) {
+            throw new IllegalArgumentException("Language cannot be empty");
+        }
         this.language = language;
     }
 
-    public int getViewCount() {
-        return viewCount;
+    // Métodos delegados para AccessControl
+    protected void setAccessRights(String accessRights) {
+        accessControl.updateAccessRights(accessRights);
     }
 
-    public void setViewCount(int viewCount) {
-        this.viewCount = viewCount;
+    protected void setDownloadable(boolean downloadable) {
+        accessControl.setDownloadable(downloadable);
     }
 
-    public int getDownloadCount() {
-        return downloadCount;
-    }
-
-    public void setDownloadCount(int downloadCount) {
-        this.downloadCount = downloadCount;
-    }
-
-    public int getShareCount() {
-        return shareCount;
-    }
-
-    public void setShareCount(int shareCount) {
-        this.shareCount = shareCount;
+    protected boolean getIsDownloadable() {
+        return accessControl.isDownloadable();
     }
 }
