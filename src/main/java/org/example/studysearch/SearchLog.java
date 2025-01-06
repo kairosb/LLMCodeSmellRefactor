@@ -31,8 +31,8 @@ public class SearchLog {
     public Map<String, Integer> getSearchCount() {
         return searchCount;
     }
-    public void setSearchCount(Map<String, Integer> searchCount) {
-        this.searchCount = searchCount;
+    public void setSearchCount(Map<String, Integer> serchCount) {
+        this.searchCount = serchCount;
     }
 
     public boolean isLocked() {
