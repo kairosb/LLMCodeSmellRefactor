@@ -7,10 +7,7 @@ import org.example.studymaterial.VideoReference;
 import org.example.studyregistry.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.example.controllers.MainController.getInput;
 import static org.example.controllers.MainController.validateInput;
@@ -24,14 +21,18 @@ public class StudyRegistryController {
         assignActions();
     }
 
+    static String getInput(){
+        Scanner scanner = new Scanner(System.in);
+        return scanner.nextLine();
+    }
+
     void assignActions(){
-        actions.put("1", this::handleAddStudyTask);
-        actions.put("2", this::handleAddStudyGoal);
-        actions.put("3", this::handleAddStudyMaterial);
-        actions.put("4", this::handleAddStudyObjective);
-        actions.put("5", this::handleAddStudyPlan);
-        actions.put("6", this::handleSetUpWeek);
-        actions.put("7", this::handleGetWeekResponsibilities);
+        actions.put("1", this::handleAddStudyGoal);
+        actions.put("2", this::handleAddStudyMaterial);
+        actions.put("3", this::handleAddStudyObjective);
+        actions.put("4", this::handleAddStudyPlan);
+        actions.put("5", this::handleSetUpWeek);
+        actions.put("6", this::handleGetWeekResponsibilities);
     }
 
     private void handleMethodHeader(String header){
@@ -40,26 +41,46 @@ public class StudyRegistryController {
 
     private Task getStudyTaskInfo(){
         System.out.println("Type the following info: title, description, author \n");
-        String title = getInput();
-        String description = getInput();
-        String author = getInput();
-        return new Task(title, description, author, LocalDateTime.now());
+        return new Task(getInput(), getInput(), getInput(), LocalDateTime.now());
     }
 
     private void handleAddStudyTask(){
-        Task task = getStudyTaskInfo();
-        studyTaskManager.addRegistry(task);
+        studyTaskManager.addRegistry(getStudyTaskInfo());
     }
 
-    private void handleSetObjective(StudyObjective objective){
+    private void handleSetObjective(StudyObjective objective) {
         handleMethodHeader("(Study Objective Edit)");
-        System.out.println("Type the following info: Integer id, Integer priority " +
-                "Integer practicedDays, int day, int month, int year, String name, String title, String description, " +
-                "String topic, String objectiveInOneLine, String objectiveFullDescription, String motivation, " +
-                "Double duration, boolean isActive  \n");
-        objective.handleSetObjective(Integer.parseInt(getInput()), Integer.parseInt(getInput()),Integer.parseInt(getInput()),Integer.parseInt(getInput()),Integer.parseInt(getInput()),
-                Integer.parseInt(getInput()), getInput(), getInput(), getInput(), getInput(), getInput(), getInput(), getInput(),
-                Double.parseDouble(getInput()), Boolean.parseBoolean(getInput()));
+        ObjectiveSetParams params = collectObjectiveParams();
+        try {
+            objective.handleSetObjective(params);
+            System.out.println("Study Objective updated successfully. ID: " + params.getId());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error setting the objective: " + e.getMessage());
+        }
+    }
+
+    private ObjectiveSetParams collectObjectiveParams() {
+        try {
+            return new ObjectiveSetParams(
+                Long.parseLong(getInput()),
+                Integer.parseInt(getInput()),
+                Integer.parseInt(getInput()),
+                Integer.parseInt(getInput()),
+                Integer.parseInt(getInput()),
+                Integer.parseInt(getInput()),
+                getInput(),
+                getInput(),
+                getInput(),
+                getInput(),
+                getInput(),
+                getInput(),
+                getInput(),
+                Double.parseDouble(getInput()),
+                Boolean.parseBoolean(getInput())
+            );
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Error converting input: " + e.getMessage());
+        }
     }
 
     private StudyObjective getStudyObjectiveInfo(){
@@ -75,130 +96,192 @@ public class StudyRegistryController {
 
     private StudyPlan getStudyPlanInfo(){
         handleMethodHeader("(Study Plan Creation)");
-        System.out.println("Type the following info: name \n");
-        String name = getInput();
         StudyObjective studyObjective = getStudyObjectiveInfo();
-        StudyPlan plan = new StudyPlan(name, studyObjective,  new ArrayList<>());
+        if (studyObjective == null) {
+            return null;
+        }
+        StudyPlan plan = new StudyPlan(getInput(), studyObjective, new ArrayList<>());
         studyTaskManager.addRegistry(plan);
         return plan;
     }
 
-    private void handleSetSteps(StudyPlan studyPlan){
-        handleMethodHeader("(Study Plan Edit)");
-        System.out.println("Type the following info: String firstStep, String resetStudyMechanism, String consistentStep, " +
-                "String seasonalSteps, String basicSteps, String mainObjectiveTitle, String mainGoalTitle, String mainMaterialTopic, " +
-                "String mainTask, @NotNull  Integer numberOfSteps, boolean isImportant. " +
-                "The Date to start is today, the date to end is x days from now, type the quantity of days\n");
-        LocalDateTime createdAT = LocalDateTime.now();
-        studyPlan.assignSteps(getInput(), getInput(), getInput(), getInput(), getInput(), getInput(), getInput(), getInput(), getInput(),
-                Integer.parseInt(getInput()), Boolean.parseBoolean(getInput()), createdAT, createdAT.plusDays(Long.parseLong(getInput())));
-    }
+
 
     private StudyGoal getStudyGoalInfo(){
         handleMethodHeader("(Study Goal Creation)");
-        System.out.println("Type the following info: name \n");
-        String name = getInput();
         StudyPlan studyPlan = getStudyPlanInfo();
+        if (studyPlan == null) {
+            return null;
+        }
         handleSetSteps(studyPlan);
-        StudyObjective studyObjective = studyPlan.getObjective();
-        return new StudyGoal(name, studyObjective, studyPlan);
+        return new StudyGoal(getInput(), studyPlan.getObjective(), studyPlan);
     }
 
     private void handleAddStudyGoal(){
         StudyGoal goal = getStudyGoalInfo();
-        studyTaskManager.addRegistry(goal);
-    }
-
-    private void editAudio(AudioReference audioReference){
-        handleMethodHeader("(Audio Edit)");
-        System.out.println("Type the following info:  AudioReference. AudioQuality audioQuality, boolean isDownloadable, " +
-                "String title, String description, String link, String accessRights, String license, String language, int rating, " +
-                "int viewCount, int shareCount \n");
-        AudioReference.AudioQuality quality =AudioReference.audioQualityAdapter(getInput());
-        audioReference.editAudio(quality, Boolean.parseBoolean(getInput()), getInput(), getInput(), getInput(), getInput(),
-                getInput(), getInput(), Integer.parseInt(getInput()), Integer.parseInt(getInput()), Integer.parseInt(getInput()));
+        if (goal != null) {
+            studyTaskManager.addRegistry(goal);
+        }
     }
 
     private AudioReference addAudioReference(){
         handleMethodHeader("(Audio Reference Creation)");
-        System.out.println("Type the following info: Audio Quality ( LOW | MEDIUM | HIGH | VERY_HIGH) \n");
         AudioReference audioReference = new AudioReference(AudioReference.audioQualityAdapter(getInput()));
-        editAudio(audioReference);
+        editAudioReference(audioReference);
         return audioReference;
     }
 
-    private VideoReference addVideoReference(){
-        handleMethodHeader("(Video Reference Creation)");
-        System.out.println("Type the following info: boolean isAvailable, String title, " +
-                "String description, String resolution, String frameRate, String videoFormat, String accessRights \n");
-        return new VideoReference(Boolean.parseBoolean(getInput()), getInput(), getInput(), getInput(), getInput(),
-                getInput(), getInput());
-    }
-
-    private TextReference addTextReference(){
-        handleMethodHeader("(Text Reference Creation)");
-        System.out.println("Type the following info:  String title, String language, int wordCount, String format, String accessRights \n");
-        return new TextReference(getInput(), getInput(), Integer.parseInt(getInput()), getInput(),
-                getInput());
-    }
-
-    private Reference addStudyMaterial(){
-        handleMethodHeader("(Study Material Creation)");
-        System.out.println("Type the following info: ( AUDIO | VIDEO | TEXT ) \n");
-        String type = getInput();
-        return switch (type.toLowerCase()) {
-            case "audio" -> addAudioReference();
-            case "video" -> addVideoReference();
-            case "text" -> addTextReference();
-            default -> null;
-        };
+    private void editAudioReference(AudioReference audioReference){
+        try {
+            audioReference.editAudio(
+                AudioReference.audioQualityAdapter(getInput()),
+                Boolean.parseBoolean(getInput()),
+                new AudioReference.AudioMetadata(
+                    getInput(),
+                    getInput(),
+                    getInput(),
+                    getInput(),
+                    getInput(),
+                    getInput()
+                ),
+                new AudioReference.AudioStats(
+                    Integer.parseInt(getInput()),
+                    Integer.parseInt(getInput()),
+                    Integer.parseInt(getInput())
+                )
+            );
+        } catch (NumberFormatException e) {
+            System.out.println("Error editing audio: " + e.getMessage());
+        }
     }
 
     private void handleAddStudyMaterial(){
-        Reference reference = addStudyMaterial();
-        if(reference != null){
+        Reference reference = createReferenceFromInput();
+        if (reference != null) {
             studyMaterial.addReference(reference);
         }
     }
 
-    private void handleAddStudyObjective(){
-        getStudyObjectiveInfo();
+    private Reference createReferenceFromInput() {
+        handleMethodHeader("(Study Material Creation)");
+        String type = getInput().toLowerCase();
+        return switch (type) {
+            case "audio" -> addAudioReference();
+            case "video" -> new VideoReference(
+                Boolean.parseBoolean(getInput()),
+                getInput(),
+                getInput(),
+                getInput(),
+                getInput(),
+                getInput(),
+                getInput()
+            );
+            case "text" -> new TextReference(
+                getInput(),
+                getInput(),
+                Integer.parseInt(getInput()),
+                getInput(),
+                getInput()
+            );
+            default -> {
+                System.out.println("Invalid type. Must be AUDIO, VIDEO, or TEXT.");
+                yield null;
+            }
+        };
     }
 
-    private void handleAddStudyPlan(){
-        getStudyPlanInfo();
-        System.out.println("Study Plan Added");
+    public void handleRegistryInput(){
+        try {
+            while(true){
+                controllerOptions();
+                String response = validateInput(actions);
+                if(response == null) {
+                    return;
+                }
+                actions.get(response).run();
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
-    private void getWeekInfo(){
-        System.out.println("(Study Task Manager Week Set Up) Type the following info: String planName, String objectiveTitle, " +
-                "String objectiveDescription, String materialTopic, String materialFormat, String goal, String reminderTitle, " +
-                "String reminderDescription, String mainTaskTitle, String mainHabit, String mainCardStudy");
-        studyTaskManager.setUpWeek(getInput(), getInput(), getInput(), getInput(), getInput(), getInput(), getInput(), getInput(),
-                getInput(), getInput(), getInput());
+    private void handleAddStudyObjective() {
+        StudyObjective studyObjective = getStudyObjectiveInfo();
+        if (studyObjective != null) {
+            System.out.println("Study Objective added successfully.");
+        }
     }
 
-    private void handleSetUpWeek(){
-        getWeekInfo();
+    private void handleAddStudyPlan() {
+        StudyPlan plan = getStudyPlanInfo();
+        if (plan != null) {
+            System.out.println("Study Plan added successfully.");
+        }
+    }
+    private void handleSetSteps(StudyPlan studyPlan){
+        handleMethodHeader("(Study Plan Edit)");
+        AssignStepsParameters params = collectAssignStepsParameters();
+        try {
+            studyPlan.assignSteps(params);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error assigning steps: " + e.getMessage());
+        }
+    }
+
+    private AssignStepsParameters collectAssignStepsParameters() {
+        try {
+            return new AssignStepsParameters(
+                new AssignStepsParameters.StepDetails(
+                    getInput(),
+                    getInput(),
+                    getInput(),
+                    getInput(),
+                    getInput()
+                ),
+                new AssignStepsParameters.PlanDetails(
+                    getInput(),
+                    getInput(),
+                    getInput(),
+                    getInput(),
+                    Integer.parseInt(getInput()),
+                    Boolean.parseBoolean(getInput()),
+                    LocalDateTime.now(),
+                    LocalDateTime.now().plusDays(Long.parseLong(getInput()))
+                )
+            );
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Error converting input: " + e.getMessage());
+        }
+    }
+
+    private void handleSetUpWeek() {
+        handleMethodHeader("(Week Setup)");
+        WeekSetupParameters params = collectWeekSetupParameters();
+        studyTaskManager.setUpWeek(params);
+        System.out.println("Week setup completed successfully.");
+    }
+
+    private WeekSetupParameters collectWeekSetupParameters() {
+        return new WeekSetupParameters.Builder()
+            .withPlanName(getInput())
+            .withObjectiveTitle(getInput())
+            .withObjectiveDescription(getInput())
+            .withMaterialTopic(getInput())
+            .withMaterialFormat(getInput())
+            .withGoal(getInput())
+            .withReminderTitle(getInput())
+            .withReminderDescription(getInput())
+            .withMainTaskTitle(getInput())
+            .withMainHabit(getInput())
+            .withMainCardStudy(getInput())
+            .build();
     }
 
     private void handleGetWeekResponsibilities(){
         List<String> responsibilities = studyTaskManager.getWeekResponsibilities();
-        System.out.println(String.join(", ", responsibilities));
+        System.out.println("Week Responsibilities: " + String.join(", ", responsibilities));
     }
 
-    public void handleRegistryInput(){
-        try{
-            while(true){
-                controllerOptions();
-                String response = validateInput(actions);
-                if(response == null) {return;}
-                actions.get(response).run();
-            }
-        }catch (Exception e){
-            System.out.println(e.getMessage());
-        }
-    }
 
     public static void controllerOptions(){
         System.out.println("""

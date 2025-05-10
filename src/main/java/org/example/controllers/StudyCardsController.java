@@ -113,19 +113,16 @@ public class StudyCardsController {
         }
     }
 
+    // Em StudyCardsController.java - manter o método original para compatibilidade
     public String getRandomCardFromBox() {
-        String response = "";
-        response += leitnerSystem.getMethodName();
-        List<Box> boxes = leitnerSystem.getBoxes();
-        response += leitnerSystem.getRandomCard(boxes);
-        return response;
+        return leitnerSystem.getFormattedRandomCard();
     }
 
     public void handleGetRandomCardFromBox() {
-        try{
-            String response = getRandomCardFromBox();
+        try {
+            String response = leitnerSystem.getFormattedRandomCard();
             System.out.println(response);
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }

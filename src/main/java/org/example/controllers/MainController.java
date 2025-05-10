@@ -17,7 +17,7 @@ public class MainController {
         this.studySearchController = studySearchController;
     }
 
-    public static String getInput(){
+    static String getInput(){
         Scanner scanner = new Scanner(System.in);
         return scanner.nextLine();
     }
